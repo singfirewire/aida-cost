@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="th" class="min-h-screen">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Photo Service Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        @media (max-width: 768px) {
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .table-container table {
+                min-width: 600px;
+            }
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .content {
+            flex: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="content max-w-7xl mx-auto p-4 space-y-6">
+        <!-- หัวข้อหลัก -->
+        <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">
+            คำนวณราคากรอบรูปงานถ่ายรูปโรงเรียน
+        </h1>
+
+        <!-- ตารางแสดงต้นทุนและราคาขาย -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">ต้นทุนและราคาขายแยกตามขนาด</h2>
+            <div class="table-container">
+                <table class="w-full border-collapse bg-white">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border border-gray-200 p-3 text-left text-gray-600">ขนาด</th>
+                            <th class="border border-gray-200 p-3 text-left text-gray-600">จำนวน</th>
+                            <th class="border border-gray-200 p-3 text-left text-gray-600">ต้นทุนรวม</th>
+                            <th class="border border-gray-200 p-3 text-left text-gray-600">ต้นทุน/ชิ้น</th>
+                            <th class="border border-gray-200 p-3 text-right text-gray-600">ราคาขาย/ชิ้น</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-table"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- จำนวนการสั่งซื้อ -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">จำนวนการสั่งซื้อ</h2>
+            <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ขนาด 8x10</label>
+                    <input type="number" id="order-8x10" value="20"
+                        class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ขนาด 8x12</label>
+                    <input type="number" id="order-8x12" value="0"
+                        class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ขนาด 10x12</label>
+                    <input type="number" id="order-10x12" value="25"
+                        class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ขนาด 8x15</label>
+                    <input type="number" id="order-8x15" value="5"
+                        class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- ข้อมูลพื้นฐาน -->
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">ข้อมูลพื้นฐาน</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- วิธีจัดส่ง -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">วิธีจัดส่ง</label>
+                        <select id="delivery-method" 
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="shipping">จัดส่งชิ้นงานทางขนส่ง</option>
+                            <option value="self">จัดส่งชิ้นงานด้วยตัวเอง</option>
+                        </select>
+                    </div>
+                    <!-- ค่าขนส่ง -->
+                    <div id="shipping-cost-container">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ค่าขนส่ง (บาท)</label>
+                        <input type="number" id="shipping-cost" value="0"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ระยะทาง (กม.)</label>
+                        <input type="number" id="distance" value="20"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">จำนวนช่างภาพ</label>
+                        <input type="number" id="photographers" value="1"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">จำนวนผู้ช่วย</label>
+                        <input type="number" id="assistants" value="1"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <!-- เพิ่มช่องกำไรที่อยากได้ -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">กำไรที่อยากได้ (%)</label>
+                        <input type="number" id="profit-margin" value="20"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- สรุปค่าใช้จ่ายคงที่ -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">สรุปค่าใช้จ่ายคงที่</h2>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="space-y-3">
+                        <p id="total-frames" class="text-gray-700"></p>
+                        <p id="travel-cost" class="text-gray-700"></p>
+                        <p id="shipping-display" class="text-gray-700"></p>
+                        <p id="accommodation-cost" class="text-gray-700"></p>
+                        <p id="food-cost" class="text-gray-700"></p>
+                        <p id="coffee-cost" class="text-gray-700"></p>
+                        <p id="staff-cost" class="text-gray-700"></p>
+                        <p id="total-fixed-costs" class="font-semibold text-gray-800"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- ราคาต้นทุนกรอบรูป -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">ราคาต้นทุนกรอบรูปสำเร็จ</h2>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ขนาด 8x10</label>
+                        <input type="number" id="frame-cost-8x10" value="60"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ขนาด 8x12</label>
+                        <input type="number" id="frame-cost-8x12" value="65"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ขนาด 10x12</label>
+                        <input type="number" id="frame-cost-10x12" value="90"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ขนาด 8x15</label>
+                        <input type="number" id="frame-cost-8x15" value="100"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ค่าใช้จ่ายพื้นฐาน -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">ค่าใช้จ่ายพื้นฐาน</h2>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ค่าเดินทาง (บาท)</label>
+                        <input type="number" id="travel-rate" readonly
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ค่าที่พัก/ห้อง (บาท)</label>
+                        <input type="number" id="room-rate" value="0"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ค่าอาหาร/คน (บาท)</label>
+                        <input type="number" id="food-rate" value="300"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ค่ากาแฟ/คน (บาท)</label>
+                        <input type="number" id="coffee-rate" value="100"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ค่าช่างภาพ/คน (บาท)</label>
+                        <input type="number" id="photographer-rate" value="2000"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ค่าผู้ช่วย/คน (บาท)</label>
+                        <input type="number" id="assistant-rate" value="1000"
+                            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-sm text-gray-500">
+        <p>School Photo Service Calculator v1.0</p>
+        <p>พัฒนาโดย 1O1</p>
+    </footer>
+
+    <script>
+        // ขนาดกรอบทั้งหมด
+        const sizes = ['8x10', '8x12', '10x12', '8x15'];
+
+        // ฟังก์ชันจัดการการแสดง/ซ่อนช่องค่าขนส่ง
+        function handleDeliveryMethodChange() {
+            const deliveryMethod = document.getElementById('delivery-method').value;
+            const shippingCostContainer = document.getElementById('shipping-cost-container');
+            
+            if (deliveryMethod === 'shipping') {
+                shippingCostContainer.style.display = 'block';
+            } else {
+                shippingCostContainer.style.display = 'none';
+                document.getElementById('shipping-cost').value = '0';
+            }
+            updateTravelRate();
+        }
+
+        // ฟังก์ชันคำนวณค่าเดินทาง
+        function updateTravelRate() {
+            const distance = Number(document.getElementById('distance').value);
+            const deliveryMethod = document.getElementById('delivery-method').value;
+            
+            // คำนวณค่าเดินทางพื้นฐาน (ระยะทาง × 6)
+            let travelRate = distance * 6;
+            
+            // ถ้าจัดส่งด้วยตัวเอง คูณ 2 (ไป-กลับ 2 รอบ)
+            if (deliveryMethod === 'self') {
+                travelRate = travelRate * 2;
+            }
+            
+            document.getElementById('travel-rate').value = travelRate;
+            calculateCosts();
+        }
+
+        // ฟังก์ชันคำนวณราคา
+        function calculateCosts() {
+            // อ่านค่าจาก input
+            const distance = Number(document.getElementById('distance').value);
+            const photographers = Number(document.getElementById('photographers').value);
+            const assistants = Number(document.getElementById('assistants').value);
+            const profitMargin = Number(document.getElementById('profit-margin').value); // อ่านค่ากำไรที่อยากได้
+
+            // อ่านค่าใช้จ่ายพื้นฐาน
+            const travelRate = Number(document.getElementById('travel-rate').value);
+            const roomRate = Number(document.getElementById('room-rate').value);
+            const foodRate = Number(document.getElementById('food-rate').value);
+            const coffeeRate = Number(document.getElementById('coffee-rate').value);
+            const photographerRate = Number(document.getElementById('photographer-rate').value);
+            const assistantRate = Number(document.getElementById('assistant-rate').value);
+
+            // อ่านค่าขนส่ง (ถ้ามี)
+            const shippingCost = Number(document.getElementById('shipping-cost').value);
+            const deliveryMethod = document.getElementById('delivery-method').value;
+
+            // คำนวณค่าใช้จ่ายคงที่
+            const totalPeople = photographers + assistants;
+            const roomsNeeded = Math.ceil(totalPeople / 2);
+            const travelCost = travelRate;
+            const accommodationCost = roomsNeeded * roomRate;
+            const foodCost = totalPeople * foodRate;
+            const coffeeCost = totalPeople * coffeeRate;
+            const staffCost = (photographers * photographerRate) + 
+                            (assistants * assistantRate);
+
+            // รวมค่าใช้จ่ายคงที่และค่าขนส่ง (ถ้ามี)
+            const totalFixedCosts = travelCost + accommodationCost + foodCost + coffeeCost + staffCost + 
+                (deliveryMethod === 'shipping' ? shippingCost : 0);
+
+            // คำนวณจำนวนกรอบและต้นทุนแยกตามขนาด
+            const orders = {};
+            const frameCosts = {};
+            let totalFrames = 0;
+
+            sizes.forEach(size => {
+                orders[size] = Number(document.getElementById(`order-${size}`).value);
+                frameCosts[size] = Number(document.getElementById(`frame-cost-${size}`).value);
+                totalFrames += orders[size];
+            });
+
+            // แสดงค่าใช้จ่ายคงที่
+            document.getElementById('total-frames').textContent = `จำนวนกรอบรวม: ${totalFrames} ชิ้น`;
+            document.getElementById('travel-cost').textContent = `ค่าเดินทาง: ${Math.ceil(travelCost).toLocaleString()} บาท`;
+            document.getElementById('shipping-display').textContent = deliveryMethod === 'shipping' ? 
+                `ค่าขนส่ง: ${Math.ceil(shippingCost).toLocaleString()} บาท` : '';
+            document.getElementById('accommodation-cost').textContent = `ค่าที่พัก: ${Math.ceil(accommodationCost).toLocaleString()} บาท`;
+            document.getElementById('food-cost').textContent = `ค่าอาหาร: ${Math.ceil(foodCost).toLocaleString()} บาท`;
+            document.getElementById('coffee-cost').textContent = `ค่ากาแฟ: ${Math.ceil(coffeeCost).toLocaleString()} บาท`;
+            document.getElementById('staff-cost').textContent = `ค่าทีมงาน: ${Math.ceil(staffCost).toLocaleString()} บาท`;
+            document.getElementById('total-fixed-costs').textContent = `ค่าใช้จ่ายคงที่รวม: ${Math.ceil(totalFixedCosts).toLocaleString()} บาท`;
+
+            // สร้างตารางผลลัพธ์
+            let tableHtml = '';
+            sizes.forEach(size => {
+                if (orders[size] > 0) {
+                    const quantity = orders[size];
+                    const frameBasePrice = frameCosts[size];
+                    const frameTotalCost = frameBasePrice * quantity;
+                    const fixedCostShare = totalFixedCosts * (quantity / totalFrames);
+                    const totalCost = fixedCostShare + frameTotalCost;
+                    const costPerFrame = totalCost / quantity;
+                    const pricePerFrame = costPerFrame * (1 + (profitMargin / 100)); // ใช้ค่ากำไรที่ผู้ใช้กรอก
+
+                    tableHtml += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="border border-gray-200 p-3">${size}</td>
+                            <td class="border border-gray-200 p-3">${quantity}</td>
+                            <td class="border border-gray-200 p-3">${Math.ceil(totalCost).toLocaleString()}</td>
+                            <td class="border border-gray-200 p-3">${Math.ceil(costPerFrame).toLocaleString()}</td>
+                            <td class="border border-gray-200 p-3 text-right font-semibold">${Math.ceil(pricePerFrame).toLocaleString()}</td>
+                        </tr>
+                    `;
+                }
+            });
+            document.getElementById('results-table').innerHTML = tableHtml;
+        }
+
+        // เพิ่ม event listener สำหรับการเปลี่ยนวิธีจัดส่ง
+        document.getElementById('delivery-method').addEventListener('change', handleDeliveryMethodChange);
+        document.getElementById('shipping-cost').addEventListener('input', updateTravelRate);
+        document.getElementById('distance').addEventListener('input', updateTravelRate);
+        document.getElementById('profit-margin').addEventListener('input', calculateCosts); // เพิ่ม event listener สำหรับกำไรที่อยากได้
+
+        // เพิ่ม event listener สำหรับทุก input
+        document.querySelectorAll('input').forEach(input => {
+            if (input.id !== 'travel-rate') { // ยกเว้นช่องค่าเดินทางที่เป็น readonly
+                input.addEventListener('input', calculateCosts);
+            }
+        });
+
+        // คำนวณครั้งแรกตอนโหลดหน้า
+        handleDeliveryMethodChange();
+    </script>
+</body>
+</html>
