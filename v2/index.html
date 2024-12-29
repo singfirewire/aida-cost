@@ -37,7 +37,7 @@
     <div class="content max-w-7xl mx-auto p-4 space-y-6">
         <!-- หัวข้อหลัก -->
         <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">
-            คำนวณราคากรอบรูปงานถ่ายรูปโรงเรียน
+            เครื่องคำนวณราคางานถ่ายรูปโรงเรียน
         </h1>
 
         <!-- ตารางแสดงต้นทุนและราคาขาย -->
@@ -103,7 +103,7 @@
                     <!-- ค่าขนส่ง -->
                     <div id="shipping-cost-container">
                         <label class="block text-sm font-medium text-gray-700 mb-1">ค่าขนส่ง (บาท)</label>
-                        <input type="number" id="shipping-cost" value="0"
+                        <input type="number" id="shipping-cost" value="180"
                             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
@@ -124,7 +124,7 @@
                     <!-- เพิ่มช่องกำไรที่อยากได้ -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">กำไรที่อยากได้ (%)</label>
-                        <input type="number" id="profit-margin" value="20"
+                        <input type="number" id="profit-margin" value="25"
                             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
@@ -143,6 +143,8 @@
                         <p id="coffee-cost" class="text-gray-700"></p>
                         <p id="staff-cost" class="text-gray-700"></p>
                         <p id="total-fixed-costs" class="font-semibold text-gray-800"></p>
+                        <!-- เพิ่มกำไรสุทธิ -->
+                        <p id="net-profit" class="font-semibold text-green-600"></p>
                     </div>
                 </div>
             </div>
@@ -192,7 +194,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">ค่าอาหาร/คน (บาท)</label>
-                        <input type="number" id="food-rate" value="300"
+                        <input type="number" id="food-rate" value="150"
                             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
@@ -202,12 +204,12 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">ค่าช่างภาพ/คน (บาท)</label>
-                        <input type="number" id="photographer-rate" value="2000"
+                        <input type="number" id="photographer-rate" value="1800"
                             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">ค่าผู้ช่วย/คน (บาท)</label>
-                        <input type="number" id="assistant-rate" value="1000"
+                        <input type="number" id="assistant-rate" value="800"
                             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
@@ -294,12 +296,30 @@
             const orders = {};
             const frameCosts = {};
             let totalFrames = 0;
+            let totalCost = 0;
+            let totalRevenue = 0;
 
             sizes.forEach(size => {
                 orders[size] = Number(document.getElementById(`order-${size}`).value);
                 frameCosts[size] = Number(document.getElementById(`frame-cost-${size}`).value);
                 totalFrames += orders[size];
+
+                if (orders[size] > 0) {
+                    const quantity = orders[size];
+                    const frameBasePrice = frameCosts[size];
+                    const frameTotalCost = frameBasePrice * quantity;
+                    const fixedCostShare = totalFixedCosts * (quantity / totalFrames);
+                    const sizeTotalCost = fixedCostShare + frameTotalCost;
+                    const costPerFrame = sizeTotalCost / quantity;
+                    const pricePerFrame = costPerFrame * (1 + (profitMargin / 100));
+
+                    totalCost += sizeTotalCost;
+                    totalRevenue += pricePerFrame * quantity;
+                }
             });
+
+            // คำนวณกำไรสุทธิ
+            const netProfit = totalRevenue - totalCost;
 
             // แสดงค่าใช้จ่ายคงที่
             document.getElementById('total-frames').textContent = `จำนวนกรอบรวม: ${totalFrames} ชิ้น`;
@@ -311,6 +331,7 @@
             document.getElementById('coffee-cost').textContent = `ค่ากาแฟ: ${Math.ceil(coffeeCost).toLocaleString()} บาท`;
             document.getElementById('staff-cost').textContent = `ค่าทีมงาน: ${Math.ceil(staffCost).toLocaleString()} บาท`;
             document.getElementById('total-fixed-costs').textContent = `ค่าใช้จ่ายคงที่รวม: ${Math.ceil(totalFixedCosts).toLocaleString()} บาท`;
+            document.getElementById('net-profit').textContent = `กำไรสุทธิ (ก่อนภาษี): ${Math.ceil(netProfit).toLocaleString()} บาท`;
 
             // สร้างตารางผลลัพธ์
             let tableHtml = '';
@@ -320,15 +341,15 @@
                     const frameBasePrice = frameCosts[size];
                     const frameTotalCost = frameBasePrice * quantity;
                     const fixedCostShare = totalFixedCosts * (quantity / totalFrames);
-                    const totalCost = fixedCostShare + frameTotalCost;
-                    const costPerFrame = totalCost / quantity;
-                    const pricePerFrame = costPerFrame * (1 + (profitMargin / 100)); // ใช้ค่ากำไรที่ผู้ใช้กรอก
+                    const sizeTotalCost = fixedCostShare + frameTotalCost;
+                    const costPerFrame = sizeTotalCost / quantity;
+                    const pricePerFrame = costPerFrame * (1 + (profitMargin / 100));
 
                     tableHtml += `
                         <tr class="hover:bg-gray-50">
                             <td class="border border-gray-200 p-3">${size}</td>
                             <td class="border border-gray-200 p-3">${quantity}</td>
-                            <td class="border border-gray-200 p-3">${Math.ceil(totalCost).toLocaleString()}</td>
+                            <td class="border border-gray-200 p-3">${Math.ceil(sizeTotalCost).toLocaleString()}</td>
                             <td class="border border-gray-200 p-3">${Math.ceil(costPerFrame).toLocaleString()}</td>
                             <td class="border border-gray-200 p-3 text-right font-semibold">${Math.ceil(pricePerFrame).toLocaleString()}</td>
                         </tr>
